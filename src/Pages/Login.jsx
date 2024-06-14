@@ -1,9 +1,57 @@
-import React from "react";
-import { Link } from "react-router-dom";
-
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  getAuth,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 const Login = () => {
+  const auth = getAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    if (email == "") {
+      toast.error("Email is invalid");
+    } else if (password == "") {
+      toast.error("Password is invalid");
+    } else if (remember == "") {
+      toast.error("Remember me is invalid");
+    } else {
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          sendEmailVerification(auth.currentUser).then(() => {
+            toast.success("Login Succesfull");
+            setTimeout(() => {
+              navigate("/home");
+            }, 2000);
+          });
+          console.log(user);
+        })
+        .catch((error) => {
+          if (error.code == "auth/invalid-email") {
+            toast.error("Email is invalid");
+          } else if (error.code == "auth/invalid-credential") {
+            toast.error("Your password not matching");
+          } else if (error.code == "auth/too-many-requests") {
+            toast.error("Your account temporarily disabled");
+          } else {
+            toast.error("Error:" + error.code);
+          }
+          console.log(error.code);
+          console.log(error.message);
+        });
+    }
+  };
+
   return (
     <section class="bg-gray-50 font-primary dark:bg-gray-900">
+      <ToastContainer position="top-center" theme="dark" />
       <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -19,6 +67,8 @@ const Login = () => {
                   Email
                 </label>
                 <input
+                  onChange={(e) => setEmail(e.target.value)}
+                  value={email}
                   type="email"
                   name="email"
                   id="email"
@@ -35,6 +85,8 @@ const Login = () => {
                   password
                 </label>
                 <input
+                  onChange={(e) => setPassword(e.target.value)}
+                  value={password}
                   type="password"
                   name="password"
                   id="password"
@@ -46,6 +98,8 @@ const Login = () => {
               <div class="flex items-start">
                 <div class="flex items-center h-5">
                   <input
+                    onChange={(e) => setRemember(e.target.checked)}
+                    value={remember}
                     id="terms"
                     aria-describedby="terms"
                     type="checkbox"
@@ -68,6 +122,7 @@ const Login = () => {
                 </div>
               </div>
               <button
+                onClick={handleLogin}
                 type="submit"
                 class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >

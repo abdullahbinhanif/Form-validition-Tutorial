@@ -27,7 +27,6 @@ const Signup = () => {
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-
           sendEmailVerification(auth.currentUser).then(() => {
             toast.success("Signup succesfull,Verify your gmail account");
             setTimeout(() => {
